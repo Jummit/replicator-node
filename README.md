@@ -10,6 +10,12 @@ Write the properties you want to replicate in the `Replicators` `Members To Repl
 
 Every line should be a new property.
 
-## When to use
+## For what to use
 
 Only use this to replicate properties from the server to all clients, not the other way around.
+
+## How it works
+
+The `Replicator` node uses Godot's high level networking API.
+
+It sets the `rset_config` of each property to `remote` so it can be set on the clients using `rset`. It transmits ever property to the clients in `_process`.
