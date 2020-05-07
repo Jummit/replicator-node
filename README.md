@@ -1,8 +1,8 @@
 # Godot Replicator Node Plugin
 
-This plugin adds a `Replicator` node that replicates properties to clients without needing to write code.
+Adds a `Replicator` node that is used to easily synchronize properties with interpolation and spawning and deletion of nodes between server and client without any code.
 
-## How to use
+## Usage
 
 Add a Replicator node to the node that has properties you want to synchronize with all clients. This could be a `RigidBody` for example.
 
@@ -10,12 +10,24 @@ Write the properties you want to replicate in the `Replicators` `Members To Repl
 
 Every line should be a new property.
 
-## For what to use
-
-Only use this to replicate properties from the server to all clients, not the other way around.
+| Exported Property       | What it does                                                      |
+| -----------------       | ------------                                                      |
+| Replicate Automatically | Call `sync_members` in a specified interval                       |
+| Replicate Interval      | The interval at which to call `sync_members`                      |
+| Replicate Spawning      | Spawn on clients when spawned on the server                       |
+| Replicate Despawning    | Despawn on clients when despawned on the server                   |
+| Spawn On Joining Peers  | Spawn on newly joined clients                                          |
+| Interpolate Changes     | Use a generated Tween sibling to interpolate new members linearly |
+| Logging                 | Log changes of members on the client                              |
 
 ## How it works
 
-The `Replicator` node uses Godot's high level networking API.
+The Replicator node uses Godot's high level networking API.
 
-It sets the `rset_config` of each property to `remote` so it can be set on the clients using `rset`. It transmits ever property to the clients in `_process`.
+It adds Tween siblings if `interpolate_changes` is true, which interpolate the old value to the new value when synchronizing, and a timer which calls `sync_members` on timeout.
+
+The plugin adds an autoload singleton called "RemoteSpawner" to spawn nodes on newly joined peers.
+
+It also removes "@"s from nodes names to be able to replicate node names correctly, as it is impossible to use "@"s when setting a node name.
+
+Example: `@Bullet@2@` becomes `Bullet2`
