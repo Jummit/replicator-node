@@ -74,15 +74,14 @@ func _notification(what):
 
 
 func _on_network_peer_connected(id):
-	_log("Spawning %s on newly connected peer %s" % [subject.filename, id])
+	_log("Spawned %s on newly connected peer %s" % [subject.filename, id])
 	RemoteSpawner.rpc_id(id, "spawn", subject.name, get_network_master(), subject.filename, subject.get_parent().get_path())
 
 
 func _on_network_peer_disconnected(id):
 	if id == get_network_master():
-		yield(get_tree(), "physics_frame")
-		queue_free()
-		_log("%s despawned as master disconnected" % subject.name)
+		subject.queue_free()
+		_log("%s despawned as master (%s) disconnected" % [subject.name, get_network_master()])
 
 
 func _on_ReplicateTimer_timeout():
@@ -110,8 +109,8 @@ puppet func replicate_member(member : String, value) -> void:
 
 
 puppet func remove() -> void:
-	_log("Removing %s" % subject.name)
 	subject.queue_free()
+	_log("Removed %s" % subject.name)
 
 
 func _log(message : String) -> void:
