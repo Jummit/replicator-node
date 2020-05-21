@@ -30,6 +30,8 @@ export var interpolate_changes := true
 # log changes of members on the client
 export var logging := false
 
+const TYPES_WITH_EQUAL_APPROX_METHOD := [TYPE_VECTOR2, TYPE_RECT2, TYPE_VECTOR3, TYPE_TRANSFORM2D, TYPE_PLANE, TYPE_QUAT, TYPE_AABB, TYPE_BASIS, TYPE_TRANSFORM, TYPE_COLOR]
+
 var already_replicated_once : Dictionary = {}
 var last_replicated_values : Dictionary = {}
 
@@ -75,10 +77,15 @@ func _on_ReplicateTimer_timeout():
 
 func replicate_members(reliable := false) -> void:
 	for member in members_to_replicate.split("\n"):
-		if last_replicated_values.has(member) and (get_parent().get(member) == last_replicated_values[member]):
-			continue
-		else:
-			last_replicated_values[member] = get_parent().get(member)
+		if last_replicated_values.has(member):
+			var is_equal : bool
+			if typeof(get_parent().get(member)) in TYPES_WITH_EQUAL_APPROX_METHOD:
+				is_equal = get_parent().get(member).is_equal_approx(last_replicated_values[member])
+			else:
+				is_equal = get_parent().get(member) == last_replicated_values[member]
+			if is_equal:
+				continue
+		last_replicated_values[member] = get_parent().get(member)
 		if reliable:
 			rpc("replicate_member", member, get_parent().get(member))
 		else:
