@@ -10,10 +10,11 @@ func _on_SceneTree_node_added(node):
 	node.name = node.name.replace("@", "")
 
 
-puppet func spawn(node_name : String, scene_path : String, path : NodePath) -> void:
+remote func spawn(node_name : String, network_master : int, scene_path : String, path : NodePath) -> void:
 	print("Spawned instance of %s with the name of %s as child of %s" % [scene_path, node_name, path])
 	var instance : Node = load(scene_path).instance()
 	instance.name = node_name
+	instance.set_network_master(network_master)
 	get_node(path).add_child(instance)
 
 	# hide the instance because its position may not yet

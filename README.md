@@ -10,15 +10,16 @@ Write the properties you want to replicate in the `Replicators` `Members To Repl
 
 Every line should be a new property.
 
-| Exported Property       | What it does                                                      |
-| -----------------       | ------------                                                      |
-| Replicate Automatically | Call `replicate_members` in a specified interval                  |
-| Replicate Interval      | The interval at which to call `replicate_members`                 |
-| Replicate Spawning      | Spawn on clients when spawned on the server                       |
-| Replicate Despawning    | Despawn on clients when despawned on the server                   |
-| Spawn On Joining Peers  | Spawn on newly joined clients                                     |
-| Interpolate Changes     | Use a generated Tween sibling to interpolate new members linearly |
-| Logging                 | Log changes of members on the client                              |
+| Exported Property | What it does |
+| ----------------- | ------------ |
+| Replicate Automatically | Call `replicate_members` in a specified interval |
+| Replicate Interval | The interval at which to call `replicate_members` |
+| Replicate Spawning | Spawn on puppet instances when spawned on the master |
+| Replicate Despawning | Despawn on puppet instances when despawned on the |
+| Despawn On Disconnect | Despawn when the master disconnects |
+| Spawn On JoiningPeers | Spawn on newly joined peers |
+| Interpolate Changes | Use a generated Tween sibling to interpolate new |
+| Logging | Log changes of members on puppet instances |
 
 ## How it works
 

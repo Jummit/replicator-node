@@ -15,19 +15,22 @@ export var replicate_automatically := false
 # the interval at which to call `replicate_members`
 export var replicate_interval := 0.2
 
-# spawn on clients when spawned on the server
+# spawn on puppet instances when spawned on the master instance
 export var replicate_spawning := false
 
-# despawn on clients when despawned on the server
+# despawn on puppet instances when despawned on the master instance
 export var replicate_despawning := false
 
-# spawn on newly joined clients
+# despawn when the master disconnects
+export var despawn_on_disconnect := false
+
+# spawn on newly joined peers
 export var spawn_on_joining_peers := false
 
 # use a generated Tween sibling to interpolate new members linearly
 export var interpolate_changes := true
 
-# log changes of members on the client
+# log changes of members on puppet instances
 export var logging := false
 
 const TYPES_WITH_EQUAL_APPROX_METHOD := [TYPE_VECTOR2, TYPE_RECT2, TYPE_VECTOR3, TYPE_TRANSFORM2D, TYPE_PLANE, TYPE_QUAT, TYPE_AABB, TYPE_BASIS, TYPE_TRANSFORM, TYPE_COLOR]
@@ -35,13 +38,17 @@ const TYPES_WITH_EQUAL_APPROX_METHOD := [TYPE_VECTOR2, TYPE_RECT2, TYPE_VECTOR3,
 var already_replicated_once : Dictionary = {}
 var last_replicated_values : Dictionary = {}
 
+onready var subject : Node = get_parent()
+
 func _ready():
 	for member in members_to_replicate.split("\n", false):
 		var tween := Tween.new()
 		tween.name = member
 		add_child(tween)
-	if is_network_master() and spawn_on_joining_peers:
+	if is_network_master() and spawn_on_joining_peers and not subject.filename.empty():
 		get_tree().connect("network_peer_connected", self, "_on_network_peer_connected")
+	if not is_network_master() and despawn_on_disconnect:
+		get_tree().connect("network_peer_disconnected", self, "_on_network_peer_disconnected")
 	if is_network_master() and replicate_automatically:
 		var timer := Timer.new()
 		timer.wait_time = replicate_interval
@@ -52,13 +59,13 @@ func _ready():
 
 
 func _notification(what):
-	if not is_inside_tree() or not is_network_master():
+	if not (is_inside_tree() and is_network_master()):
 		return
 	
 	match what:
 		NOTIFICATION_ENTER_TREE:
 			if replicate_spawning:
-				RemoteSpawner.rpc("spawn", get_parent().name, get_parent().filename, get_parent().get_parent().get_path())
+				RemoteSpawner.rpc("spawn", get_parent().name, get_network_master(), get_parent().filename, get_parent().get_parent().get_path())
 				yield(get_tree(), "idle_frame")
 				replicate_members()
 		NOTIFICATION_EXIT_TREE:
@@ -67,7 +74,15 @@ func _notification(what):
 
 
 func _on_network_peer_connected(id):
-	RemoteSpawner.rpc_id(id, "spawn", get_parent().name, get_parent().filename, get_parent().get_parent().get_path())
+	_log("Spawning %s on newly connected peer %s" % [subject.filename, id])
+	RemoteSpawner.rpc_id(id, "spawn", subject.name, get_network_master(), subject.filename, subject.get_parent().get_path())
+
+
+func _on_network_peer_disconnected(id):
+	if id == get_network_master():
+		yield(get_tree(), "physics_frame")
+		queue_free()
+		_log("%s despawned as master disconnected" % subject.name)
 
 
 func _on_ReplicateTimer_timeout():
@@ -77,31 +92,35 @@ func _on_ReplicateTimer_timeout():
 
 func replicate_members(reliable := false) -> void:
 	for member in members_to_replicate.split("\n"):
-		if last_replicated_values.has(member):
-			var is_equal : bool
-			if typeof(get_parent().get(member)) in TYPES_WITH_EQUAL_APPROX_METHOD:
-				is_equal = get_parent().get(member).is_equal_approx(last_replicated_values[member])
-			else:
-				is_equal = get_parent().get(member) == last_replicated_values[member]
-			if is_equal:
-				continue
-		last_replicated_values[member] = get_parent().get(member)
-		if reliable:
-			rpc("replicate_member", member, get_parent().get(member))
-		else:
-			rpc_unreliable("replicate_member", member, get_parent().get(member))
-
-
-puppet func remove() -> void:
-	get_parent().queue_free()
+		var last_value = last_replicated_values.get(member)
+		var current_value = subject.get(member)
+		if not _is_equal_approx(current_value, last_value):
+			callv("rpc" if reliable else "rpc_unreliable", ["replicate_member", member, current_value])
+			last_replicated_values[member] = current_value
 
 
 puppet func replicate_member(member : String, value) -> void:
-	if logging:
-		print("%s of %s set to %s" % [member, get_parent().name, value])
+	_log("%s of %s set to %s" % [member, subject.name, value])
 	if already_replicated_once.has(member) and interpolate_changes:
-		get_node(member).interpolate_property(get_parent(), member, get(member), value, replicate_interval)
+		get_node(member).interpolate_property(subject, member, get(member), value, replicate_interval)
 		get_node(member).start()
 	else:
-		get_parent().set(member, value)
+		subject.set(member, value)
 	already_replicated_once[member] = true
+
+
+puppet func remove() -> void:
+	_log("Removing %s" % subject.name)
+	subject.queue_free()
+
+
+func _log(message : String) -> void:
+	if logging:
+		print(message)
+
+
+func _is_equal_approx(a, b) -> bool:
+	if a == null or b == null:
+		return false
+	else:
+		return a.is_equal_approx(b) if typeof(a) in TYPES_WITH_EQUAL_APPROX_METHOD else a == b
