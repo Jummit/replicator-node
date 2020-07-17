@@ -125,8 +125,8 @@ func setup_puppet() -> void:
 func replicate_member(member : ReplicatedMember) -> void:
 	var last_value = last_replicated_values.get(member.name)
 	var current_value = subject.get(member.name)
+	assert(current_value != null, "member %s not found on %s" % [member.name, subject.name])
 	if not _is_equal_approx(current_value, last_value):
-		assert(get(member.name) == null)
 		callv("rpc" if member.reliable else "rpc_unreliable", ["set_member_on_puppet", member.name, current_value])
 		last_replicated_values[member.name] = current_value
 		if member.logging:
@@ -134,7 +134,6 @@ func replicate_member(member : ReplicatedMember) -> void:
 
 
 puppet func set_member_on_puppet(member : String, value) -> void:
-	_log("%s of %s set to %s" % [member, subject.name, value])
 	var configuration := get_member_configuration(member)
 	if configuration.logging:
 		_log("%s of %s set to %s" % [member, subject.name, value])
