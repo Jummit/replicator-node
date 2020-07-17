@@ -63,7 +63,7 @@ func _process(_delta : float):
 
 func _get_configuration_warning():
 	if (replicate_spawning or spawn_on_joining_peers) and get_parent().filename.empty():
-		return "Can't replicate spawning if not attached to the root node of the scene!"
+		return "Can't replicate spawning if not attached to the root node of the scene."
 	return ""
 
 
@@ -72,7 +72,7 @@ func _on_tree_exiting():
 
 
 func _on_network_peer_connected(id : int):
-	_log("Spawned %s on newly connected peer (%s)" % [subject.filename, id])
+	_log("Spawning %s on newly connected peer (%s)" % [subject.filename, id])
 	remote_spawner.rpc_id(id, "spawn", get_parent().name, get_network_master(), get_parent().filename, multiplayer.root_node.get_path_to(get_parent().get_parent()))
 
 

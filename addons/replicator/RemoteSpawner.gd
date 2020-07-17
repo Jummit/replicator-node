@@ -11,7 +11,7 @@ func _on_SceneTree_node_added(node : Node):
 
 
 remote func spawn(node_name : String, network_master : int, scene_path : String, path : NodePath) -> void:
-	print("Spawned instance of %s with the name of %s as child of %s on peer %s" % [scene_path, node_name, path, multiplayer.get_network_unique_id()])
+	print("Spawning instance of %s with the name of %s as child of %s" % [scene_path, node_name, path])
 	var instance : Node = load(scene_path).instance()
 	instance.name = node_name
 	instance.set_network_master(network_master)
