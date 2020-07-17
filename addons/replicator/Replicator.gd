@@ -45,10 +45,10 @@ func _ready():
 		yield(multiplayer, "connected_to_server")
 	
 	if is_network_master():
-		setup_master()
+		_setup_master()
 	else:
-		setup_puppet()
-	
+		_setup_puppet()
+
 	for member in members:
 		setup_member(member)
 
@@ -69,7 +69,7 @@ func _get_configuration_warning():
 
 
 func _on_tree_exiting():
-	rpc("remove")
+	rpc("_remove")
 
 
 func _on_network_peer_connected(id : int):
@@ -103,7 +103,7 @@ func setup_member(member : ReplicatedMember) -> void:
 		add_child(tween)
 
 
-func setup_master() -> void:
+func _setup_master() -> void:
 	remote_spawner = find_node_on_parents(self, "RemoteSpawner")
 	
 	if spawn_on_joining_peers and not subject.filename.empty():
@@ -117,23 +117,12 @@ func setup_master() -> void:
 			replicate_member(member)
 
 
-func setup_puppet() -> void:
+func _setup_puppet() -> void:
 	if despawn_on_disconnect:
 		multiplayer.connect("network_peer_disconnected", self, "_on_network_peer_disconnected")
 
 
-func replicate_member(member : ReplicatedMember) -> void:
-	var last_value = last_replicated_values.get(member.name)
-	var current_value = subject.get(member.name)
-	assert(current_value != null, "member %s not found on %s" % [member.name, subject.name])
-	if not _is_equal_approx(current_value, last_value):
-		callv("rpc" if member.reliable else "rpc_unreliable", ["set_member_on_puppet", member.name, current_value])
-		last_replicated_values[member.name] = current_value
-		if member.logging:
-			_log("Replicating %s of %s with value of %s" % [member.name, subject.name, current_value])
-
-
-puppet func set_member_on_puppet(member : String, value) -> void:
+puppet func _set_member_on_puppet(member : String, value) -> void:
 	var configuration := get_member_configuration(member)
 	if configuration.logging:
 		_log("%s of %s set to %s" % [member, subject.name, value])
@@ -146,9 +135,25 @@ puppet func set_member_on_puppet(member : String, value) -> void:
 
 
 # called when the master node exits the tree
-puppet func remove() -> void:
+puppet func _remove() -> void:
 	subject.queue_free()
 	_log("Removed %s" % subject.name)
+
+
+func _log(message : String) -> void:
+	if logging:
+		print(message)
+
+
+func replicate_member(member : ReplicatedMember) -> void:
+	var last_value = last_replicated_values.get(member.name)
+	var current_value = subject.get(member.name)
+	assert(current_value != null, "member %s not found on %s" % [member.name, subject.name])
+	if not is_variant_equal_approx(current_value, last_value):
+		callv("rpc" if member.reliable else "rpc_unreliable", ["_set_member_on_puppet", member.name, current_value])
+		last_replicated_values[member.name] = current_value
+		if member.logging:
+			_log("Replicating %s of %s with value of %s" % [member.name, subject.name, current_value])
 
 
 func get_member_configuration(member_name : String) -> ReplicatedMember:
@@ -158,12 +163,7 @@ func get_member_configuration(member_name : String) -> ReplicatedMember:
 	return NO_MEMBER
 
 
-func _log(message : String) -> void:
-	if logging:
-		print(message)
-
-
-static func _is_equal_approx(a, b) -> bool:
+static func is_variant_equal_approx(a, b) -> bool:
 	if typeof(a) in TYPES_WITH_EQUAL_APPROX_METHOD and (typeof(a) == typeof(b)):
 		return a.is_equal_approx(b)
 	else:

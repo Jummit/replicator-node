@@ -19,7 +19,7 @@ remote func spawn(node_name : String, network_master : int, scene_path : String,
 	# use a path relative to multiplayer.root_node to make it possible
 	# to run server and client on the same machine
 	multiplayer.root_node.get_node(path).add_child(instance)
-
+	
 	# hide the instance as its position may not yet be
 	# replicated to avoid seeing the instance at the origin
 	if instance.has_method("show") and instance.has_method("hide"):
