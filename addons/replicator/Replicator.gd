@@ -69,7 +69,7 @@ func _get_configuration_warning():
 
 
 func _on_tree_exiting():
-	rpc("_remove")
+	rpc("_despawn")
 
 
 func _on_network_peer_connected(id : int):
@@ -108,13 +108,13 @@ func _setup_master() -> void:
 	
 	if spawn_on_joining_peers and not subject.filename.empty():
 		multiplayer.connect("network_peer_connected", self, "_on_network_peer_connected")
-	if replicate_despawning:
-		connect("tree_exiting", self, "_on_tree_exiting")
 	if replicate_spawning:
 		remote_spawner.rpc("spawn", get_parent().name, get_network_master(), get_parent().filename, multiplayer.root_node.get_path_to(get_parent().get_parent()))
 		yield(get_tree(), "idle_frame")
 		for member in members:
 			replicate_member(member)
+	if replicate_despawning:
+		connect("tree_exiting", self, "_on_tree_exiting")
 
 
 func _setup_puppet() -> void:
@@ -135,7 +135,7 @@ puppet func _set_member_on_puppet(member : String, value) -> void:
 
 
 # called when the master node exits the tree
-puppet func _remove() -> void:
+puppet func _despawn() -> void:
 	subject.queue_free()
 	_log("Removed %s" % subject.name)
 
