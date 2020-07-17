@@ -22,10 +22,13 @@ export var despawn_on_disconnect := false
 # spawn on newly joined peers
 export var spawn_on_joining_peers := false
 
+export var max_distance := INF
+
 # log changes of members on puppet instances
 export var logging := false
 
-var remote_spawner : Node
+var remote_spawner : RemoteSpawner
+var player_location_manager : PlayerLocationManager
 # store which members where replicated, to only interpolate if the master sent us a state
 var already_replicated_once : Dictionary = {}
 var last_replicated_values : Dictionary = {}
@@ -33,6 +36,8 @@ var last_replicated_values : Dictionary = {}
 onready var subject : Node = get_parent()
 
 const TYPES_WITH_EQUAL_APPROX_METHOD := [TYPE_VECTOR2, TYPE_RECT2, TYPE_VECTOR3, TYPE_TRANSFORM2D, TYPE_PLANE, TYPE_QUAT, TYPE_AABB, TYPE_BASIS, TYPE_TRANSFORM, TYPE_COLOR]
+const PlayerLocationManager = preload("res://addons/replicator/PlayerLocationManager.gd")
+const RemoteSpawner = preload("res://addons/replicator/RemoteSpawner.gd")
 const ReplicatedMember = preload("res://addons/replicator/ReplicatedMember.gd")
 var NO_MEMBER := ReplicatedMember.new()
 
@@ -105,6 +110,7 @@ func setup_member(member : ReplicatedMember) -> void:
 
 func _setup_master() -> void:
 	remote_spawner = find_node_on_parents(self, "RemoteSpawner")
+	player_location_manager = find_node_on_parents(self, "PlayerLocationManager")
 	
 	if spawn_on_joining_peers and not subject.filename.empty():
 		multiplayer.connect("network_peer_connected", self, "_on_network_peer_connected")
@@ -126,8 +132,8 @@ puppet func _set_member_on_puppet(member : String, value) -> void:
 	var configuration := get_member_configuration(member)
 	if configuration.logging:
 		_log("%s of %s set to %s" % [member, subject.name, value])
-	if already_replicated_once.has(member) and configuration.interpolate_changes:
-		get_node(member).interpolate_property(subject, member, get(member), value, configuration.replicate_interval)
+	if configuration.interpolate_changes and already_replicated_once.has(member) and distance(value, subject.get(member)) < configuration.teleport_distance:
+		get_node(member).interpolate_property(subject, member, subject.get(member), value, configuration.replicate_interval)
 		get_node(member).start()
 	else:
 		subject.set(member, value)
@@ -150,7 +156,12 @@ func replicate_member(member : ReplicatedMember) -> void:
 	var current_value = subject.get(member.name)
 	assert(current_value != null, "member %s not found on %s" % [member.name, subject.name])
 	if not is_variant_equal_approx(current_value, last_value):
-		callv("rpc" if member.reliable else "rpc_unreliable", ["_set_member_on_puppet", member.name, current_value])
+		for peer in multiplayer.get_network_connected_peers():
+			if peer == multiplayer.get_network_unique_id():
+				continue
+			var distance_to_peer := player_location_manager.get_distance(subject, peer)
+			if distance_to_peer == -1 or distance_to_peer < max_distance:
+				callv("rpc_id" if member.reliable else "rpc_unreliable_id", [peer, "_set_member_on_puppet", member.name, current_value])
 		last_replicated_values[member.name] = current_value
 		if member.logging:
 			_log("Replicating %s of %s with value of %s" % [member.name, subject.name, current_value])
@@ -168,6 +179,16 @@ static func is_variant_equal_approx(a, b) -> bool:
 		return a.is_equal_approx(b)
 	else:
 		return a == b
+
+
+static func distance(a, b) -> float:
+	if (a is Transform and b is Transform) or (a is Transform2D and b is Transform2D):
+		return a.origin.distance_to(b.origin)
+	if (a is Vector2 and b is Vector2) or (a is Vector3 and b is Vector3):
+		return a.distance_to(b)
+	if (a is float or a is int) and (b is float or b is int):
+		return a - b
+	return INF
 
 
 static func find_node_on_parents(start_node : Node, node_name : String):
