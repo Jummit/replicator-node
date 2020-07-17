@@ -37,6 +37,7 @@ const ReplicatedMember = preload("res://addons/replicator/ReplicatedMember.gd")
 var NO_MEMBER := ReplicatedMember.new()
 
 func _ready():
+	set_process(Engine.editor_hint)
 	if Engine.editor_hint:
 		return
 	
