@@ -128,11 +128,15 @@ func replicate_member(member : ReplicatedMember) -> void:
 		assert(get(member.name) == null)
 		callv("rpc" if member.reliable else "rpc_unreliable", ["set_member_on_puppet", member.name, current_value])
 		last_replicated_values[member.name] = current_value
+		if member.logging:
+			_log("Replicating %s of %s with value of %s" % [member.name, subject.name, current_value])
 
 
 puppet func set_member_on_puppet(member : String, value) -> void:
 	_log("%s of %s set to %s" % [member, subject.name, value])
 	var configuration := get_member_configuration(member)
+	if configuration.logging:
+		_log("%s of %s set to %s" % [member, subject.name, value])
 	if already_replicated_once.has(member) and configuration.interpolate_changes:
 		get_node(member).interpolate_property(subject, member, get(member), value, configuration.replicate_interval)
 		get_node(member).start()
