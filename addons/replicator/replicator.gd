@@ -29,9 +29,9 @@ which is detected using the native equal_approx method.
 const TYPES_WITH_EQUAL_APPROX_METHOD := [TYPE_VECTOR2, TYPE_RECT2,
 		TYPE_VECTOR3, TYPE_TRANSFORM2D, TYPE_PLANE, TYPE_QUAT, TYPE_AABB,
 		TYPE_BASIS, TYPE_TRANSFORM, TYPE_COLOR]
-const PlayerLocationManager = preload("PlayerLocationManager.gd")
-const RemoteSpawner = preload("RemoteSpawner.gd")
-const ReplicatedMember = preload("ReplicatedMember.gd")
+const PlayerLocationManager = preload("player_location_manager.gd")
+const RemoteSpawner = preload("remote_spawner.gd")
+const ReplicatedMember = preload("replicated_member.gd")
 
 export var members := []
 
