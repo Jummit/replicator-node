@@ -11,7 +11,7 @@ The `subject` is the node whose properties get replicated, and which is spawned 
 It is the parent of the replicator by default, but can be changed programatically.
 
 For spawning to work the `subject` must be the root of the scene,
-as only the filename is send over the network.
+as only the filename of the scene is send over the network.
 
 `members` is a list of `ReplicatedMember`s,
 which store a number of settings regarding replication.
@@ -23,48 +23,45 @@ This allows for multiple instances at the same time,
 which is needed to run server and client simultaniously.
 
 Members are only replicated when they change,
-which is detected using the native equal_approx method.
+which is detected using the native `equal_approx` method.
 """
 
-const TYPES_WITH_EQUAL_APPROX_METHOD := [TYPE_VECTOR2, TYPE_RECT2,
-		TYPE_VECTOR3, TYPE_TRANSFORM2D, TYPE_PLANE, TYPE_QUAT, TYPE_AABB,
-		TYPE_BASIS, TYPE_TRANSFORM, TYPE_COLOR]
-const PlayerLocationManager = preload("player_location_manager.gd")
-const RemoteSpawner = preload("remote_spawner.gd")
-const ReplicatedMember = preload("replicated_member.gd")
-
 export var members := []
-
 # spawn on puppet instances when spawned on the master instance
 export var replicate_spawning := false
-
 # despawn on puppet instances when despawned on the master instance
 export var replicate_despawning := false
-
 # despawn when the master disconnects
 export var despawn_on_disconnect := false
-
 # spawn on newly joined peers
 export var spawn_on_joining_peers := false
-
-# the maxium distance the `subject` can be away from the player and still get replicated
+# the maxium distance the `subject` can be
+# away from the player and still get replicated
 export var max_replication_distance := INF
-
-# log changes of members on puppet instances
+# log replication of members on the master instance
 export var enable_logging := false
 
 var remote_spawner : RemoteSpawner
 var player_location_manager : PlayerLocationManager
 
-# store which members where replicated, to only interpolate if the master sent us a state
+# store which members where replicated,
+# to only interpolate if the master sent us a state
 var already_replicated_once : Dictionary = {}
 var last_replicated_values : Dictionary = {}
 
 var NO_MEMBER := ReplicatedMember.new()
 
+const TYPES_WITH_EQUAL_APPROX_METHOD := [TYPE_VECTOR2, TYPE_RECT2,
+		TYPE_VECTOR3, TYPE_TRANSFORM2D, TYPE_PLANE, TYPE_QUAT, TYPE_AABB,
+		TYPE_BASIS, TYPE_TRANSFORM, TYPE_COLOR]
+
+const PlayerLocationManager = preload("player_location_manager.gd")
+const RemoteSpawner = preload("remote_spawner.gd")
+const ReplicatedMember = preload("replicated_member.gd")
+
 onready var subject : Node = get_parent()
 
-func _ready():
+func _ready() -> void:
 	set_process(Engine.editor_hint)
 	if Engine.editor_hint:
 		return
@@ -81,13 +78,13 @@ func _ready():
 		setup_member(member)
 
 
-func _process(_delta : float):
+func _process(_delta : float) -> void:
 	update_configuration_warning()
-	for i in range(members.size()):
-		if not typeof(members[i]) == TYPE_OBJECT:
-			members[i] = ReplicatedMember.new()
+	for member_num in range(members.size()):
+		if not typeof(members[member_num]) == TYPE_OBJECT:
+			members[member_num] = ReplicatedMember.new()
 		else:
-			members[i].resource_name = members[i].name
+			members[member_num].resource_name = members[member_num].name
 
 
 func _get_configuration_warning():
@@ -115,20 +112,25 @@ func replicate_member(member : ReplicatedMember) -> void:
 	var last_value = last_replicated_values.get(member.name)
 	var current_value = subject.get(member.name)
 	
-	assert(current_value != null, "member %s not found on %s" % [member.name, subject.name])
+	assert(member.name in subject, "member %s not found on %s" % [member.name, subject.name])
 	
-	if not _is_variant_equal_approx(current_value, last_value):
-		for peer in multiplayer.get_network_connected_peers():
-			if peer == multiplayer.get_network_unique_id():
-				continue
-			if player_location_manager.get_distance(subject, peer) < max_replication_distance:
-				if member.reliable:
-					rpc_id(peer, "_set_member_on_puppet", member.name, current_value)
-				else:
-					rpc_unreliable_id(peer, "_set_member_on_puppet", member.name, current_value)
-		last_replicated_values[member.name] = current_value
-		if member.logging:
-			_log("Replicating %s of %s with value of %s" % [member.name, subject.name, current_value])
+	if _is_variant_equal_approx(current_value, last_value):
+		return
+	
+	if member.logging:
+		_log("Replicating %s of %s with value of %s" %
+				[member.name, subject.name, current_value])
+	
+	for peer in multiplayer.get_network_connected_peers():
+		if peer == multiplayer.get_network_unique_id():
+			continue
+		if player_location_manager.get_distance(subject, peer) < max_replication_distance:
+			if member.reliable:
+				rpc_id(peer, "_set_member_on_puppet", member.name, current_value)
+			else:
+				rpc_unreliable_id(peer, "_set_member_on_puppet", member.name, current_value)
+	
+	last_replicated_values[member.name] = current_value
 
 
 func get_member_configuration(member_name : String) -> ReplicatedMember:
@@ -164,7 +166,7 @@ puppet func _set_member_on_puppet(member : String, value) -> void:
 	var configuration := get_member_configuration(member)
 	if configuration.logging:
 		_log("%s of %s set to %s" % [member, subject.name, value])
-	var interpolate : bool = _distance(value, subject.get(member)) < configuration.teleport_distance
+	var interpolate : bool = _distance(value, subject.get(member)) < configuration.max_interpolation_distance
 	if configuration.interpolate_changes and interpolate and already_replicated_once.has(member):
 		get_node(member).interpolate_property(
 				subject, member, subject.get(member),

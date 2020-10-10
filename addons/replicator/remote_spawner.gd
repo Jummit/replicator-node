@@ -4,14 +4,10 @@ func _ready():
 	get_tree().connect("node_added", self, "_on_SceneTree_node_added")
 
 
-# node names are replicated in `spawn()`,
-# but there is no way to include @s in custom names
-func _on_SceneTree_node_added(node : Node):
-	node.name = node.name.replace("@", "")
-
-
-remote func spawn(node_name : String, network_master : int, scene_path : String, path : NodePath) -> void:
-	print("Spawning instance of %s with the name of %s as child of %s" % [scene_path, node_name, path])
+remote func spawn(node_name : String, network_master : int,
+		scene_path : String, path : NodePath) -> void:
+	print("Spawning %s named %s on %s" %
+			[scene_path, node_name, path])
 	var instance : Node = load(scene_path).instance()
 	instance.name = node_name
 	instance.set_network_master(network_master)
@@ -26,3 +22,9 @@ remote func spawn(node_name : String, network_master : int, scene_path : String,
 		instance.hide()
 		yield(get_tree().create_timer(.01), "timeout")
 		instance.show()
+
+
+# node names are replicated in `spawn`,
+# but there is no way to include "@"s in custom names
+func _on_SceneTree_node_added(node : Node):
+	node.name = node.name.replace("@", "")

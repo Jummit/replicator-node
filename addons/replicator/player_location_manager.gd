@@ -15,13 +15,13 @@ func get_distance(from_node : Node, to_id : int) -> float:
 	if not to:
 		return -1.0
 	if from_node is Spatial and to is Spatial:
-		return from_node.global_transfrom.origin.distance_to(to.global_transfrom.origin)
+		return from_node.global_transform.origin.distance_to(to.global_transform.origin)
 	elif from_node is Node2D and to is Node2D:
 		return from_node.global_position.distance_to(to.global_position)
 	return -1.0
 
 
-func _on_network_peer_connected(id : int):
+func _on_network_peer_connected(id : int) -> void:
 	if id == multiplayer.get_network_unique_id():
 		return
 	var my_camera : Node = player_cameras.get(multiplayer.get_network_unique_id())
