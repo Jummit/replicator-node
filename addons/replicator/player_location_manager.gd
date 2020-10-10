@@ -1,5 +1,7 @@
 extends Node
 
+export var enable_logging := false
+
 var player_cameras : Dictionary = {}
 
 func _ready():
@@ -30,4 +32,6 @@ func _on_network_peer_connected(id : int) -> void:
 
 
 remotesync func _register_player_camera(player_camera_path : NodePath) -> void:
+	if enable_logging and not multiplayer.get_network_unique_id() == multiplayer.get_rpc_sender_id():
+		print("Registering %s as camera of peer %s" % [player_camera_path, multiplayer.get_rpc_sender_id()])
 	player_cameras[multiplayer.get_rpc_sender_id()] = multiplayer.root_node.get_node(player_camera_path)
