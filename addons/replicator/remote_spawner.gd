@@ -1,5 +1,9 @@
 extends Node
 
+"""
+Singleton that manages replicated spawning
+"""
+
 export var enable_logging := false
 
 func _ready():

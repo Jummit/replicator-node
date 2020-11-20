@@ -1,10 +1,17 @@
 extends Node
 
+"""
+Singleton used to manage player locations
+
+Player cameras have to be manually registered by each player.
+They are used for distance-based replication optimization.
+"""
+
 export var enable_logging := false
 
 var player_cameras : Dictionary = {}
 
-func _ready():
+func _ready() -> void:
 	multiplayer.connect("network_peer_connected", self, "_on_network_peer_connected")
 
 
@@ -13,7 +20,7 @@ func register(player_camera : Node) -> void:
 
 
 func get_distance(from_node : Node, to_id : int) -> float:
-	var to : Node = player_cameras.get(to_id)
+	var to : Node = player_cameras[to_id]
 	if not to:
 		return -1.0
 	if from_node is Spatial and to is Spatial:
@@ -26,7 +33,7 @@ func get_distance(from_node : Node, to_id : int) -> float:
 func _on_network_peer_connected(id : int) -> void:
 	if id == multiplayer.get_network_unique_id():
 		return
-	var my_camera : Node = player_cameras.get(multiplayer.get_network_unique_id())
+	var my_camera : Node = player_cameras[multiplayer.get_network_unique_id()]
 	if my_camera:
 		rpc_id(id, "_register_player_camera", multiplayer.root_node.get_path_to(my_camera))
 

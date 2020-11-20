@@ -80,6 +80,7 @@ func _ready() -> void:
 
 func _process(_delta : float) -> void:
 	update_configuration_warning()
+	
 	for member_num in range(members.size()):
 		if not typeof(members[member_num]) == TYPE_OBJECT:
 			members[member_num] = ReplicatedMember.new()
@@ -87,7 +88,7 @@ func _process(_delta : float) -> void:
 			members[member_num].resource_name = members[member_num].name
 
 
-func _get_configuration_warning():
+func _get_configuration_warning() -> String:
 	if (replicate_spawning or spawn_on_joining_peers) and get_parent().filename.empty():
 		return "Can't replicate spawning if not attached to the root node of the scene."
 	return ""
@@ -184,24 +185,24 @@ puppet func _despawn() -> void:
 	_log("%s despawned as master (%s) disconnected" % [subject.name, subject.get_network_master()])
 
 
-func _on_tree_exiting():
+func _on_tree_exiting() -> void:
 	rpc("_despawn")
 
 
-func _on_network_peer_connected(id : int):
+func _on_network_peer_connected(id : int) -> void:
 	_log("Spawning %s on newly connected peer (%s)" % [subject.filename, id])
 	remote_spawner.rpc_id(
 			id, "spawn", get_parent().name, get_network_master(), get_parent().filename,
 			multiplayer.root_node.get_path_to(get_parent().get_parent()))
 
 
-func _on_network_peer_disconnected(id : int):
+func _on_network_peer_disconnected(id : int) -> void:
 	if id == get_network_master():
 		subject.queue_free()
 		_log("%s despawned as master (%s) disconnected" % [subject.name, get_network_master()])
 
 
-func _on_ReplicateTimer_timeout(member : ReplicatedMember):
+func _on_ReplicateTimer_timeout(member : ReplicatedMember) -> void:
 	if is_inside_tree():
 		replicate_member(member)
 
