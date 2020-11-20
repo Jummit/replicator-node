@@ -25,3 +25,13 @@ export var logging := false
 # if `replicate_automatically` is true,
 # maximum difference between snapshots that is interpolated
 export var max_interpolation_distance := INF
+
+
+
+name | the name of the property
+interpolate_changes | if the property should be smoothly interpolated when a new value is received
+replicate_automatically | if the property should be automatically replicated in the specified `replicate_interval`
+replicate_interval | if `replicate_automatically` is true, how many seconds to wait to send the next snapshot
+reliable | whether to use NetworkedMultiplayerPeer.TRANSFER_MODE_RELIABLE instead of NetworkedMultiplayerPeer.TRANSFER_MODE_UNRELIABLE
+logging | whether to log when an update is received on a puppet peer
+max_interpolation_distance | if `replicate_automatically` is true, maximum difference between snapshots that is interpolated

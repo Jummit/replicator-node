@@ -6,9 +6,10 @@ Adds a `Replicator` node that can replicates properties with interpolation and s
 
 Add a Replicator node to the node that has properties you want to replicate with all clients. This could be a `RigidBody` for example.
 
-Write the properties you want to replicate in the `Replicators` `Members To Replicate` text field. For example, if you want to replicate the position and rotation of a `RigidBody`, type in `transform`.
+Increase the length of the `members` array by clicking the arrow next to the `length`.
+Write the properties you want to replicate in the `name` text field of the Member resource. For example, if you want to replicate the position and rotation of a `RigidBody`, type in `transform`.
 
-Every line should be a new property.
+### Replicator
 
 | Exported Property | What it does |
 | ----------------- | ------------ |
@@ -20,6 +21,18 @@ Every line should be a new property.
 | Spawn On JoiningPeers | Spawn on newly joined peers |
 | Interpolate Changes | Use a generated Tween sibling to interpolate new |
 | Logging | Log changes of members on puppet instances |
+
+### Replicated Member
+
+| Exported Property | What it does |
+| ----------------- | ------------ |
+| Name | The name of the property |
+| Interpolate Changes | If the property should be smoothly interpolated when a new value is received |
+| Replicate Automatically | If the property should be automatically replicated in the specified `replicate_interval` |
+| Replicate Interval | If `replicate_automatically` is true, how many seconds to wait to send the next snapshot |
+| Reliable | Whether to use NetworkedMultiplayerPeer.TRANSFER_MODE_RELIABLE instead of NetworkedMultiplayerPeer.TRANSFER_MODE_UNRELIABLE |
+| Logging | Whether to log when an update is received on a puppet peer |
+| Max Interpolation Distance | If `replicate_automatically` is true, maximum difference between snapshots that is interpolated |
 
 ## How it works
 
