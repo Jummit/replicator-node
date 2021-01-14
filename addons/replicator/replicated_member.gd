@@ -25,3 +25,6 @@ export var logging := false
 # if `replicate_automatically` is true,
 # maximum difference between snapshots that is interpolated
 export var max_interpolation_distance := INF
+# the minimum difference a packet needs to have from the current value to
+# be accepted
+export var min_replication_difference := 0.0

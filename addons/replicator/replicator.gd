@@ -26,7 +26,7 @@ Members are only replicated when they change,
 which is detected using the native `equal_approx` method.
 """
 
-export var members := []
+export var members : Array
 # spawn on puppet instances when spawned on the master instance
 export var replicate_spawning := false
 # despawn on puppet instances when despawned on the master instance
@@ -73,6 +73,11 @@ func _ready() -> void:
 		_setup_master()
 	else:
 		_setup_puppet()
+	
+	# make members unique so they can be modified on a per-instance basis
+	members = members.duplicate()
+	for member_num in members.size():
+		members[member_num] = members[member_num].duplicate()
 	
 	for member in members:
 		setup_member(member)
@@ -166,6 +171,9 @@ func _setup_puppet() -> void:
 
 puppet func _set_member_on_puppet(member : String, value) -> void:
 	var configuration := get_member_configuration(member)
+	if configuration.min_replication_difference and _distance(subject.get(
+			member), value) < configuration.min_replication_difference:
+		return
 	if configuration.logging:
 		_log("%s of %s set to %s" % [member, subject.name, value])
 	var interpolate : bool = _distance(value, subject.get(member)) < configuration.max_interpolation_distance
