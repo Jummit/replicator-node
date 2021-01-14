@@ -153,7 +153,7 @@ func _setup_master() -> void:
 	if spawn_on_joining_peers and not subject.filename.empty():
 		multiplayer.connect("network_peer_connected", self, "_on_network_peer_connected")
 	if replicate_spawning:
-		_log("Spawning on connected peers")
+		_log("Spawning %s on connected peers" % subject.name)
 		remote_spawner.rpc("spawn", get_parent().name, get_network_master(),
 				get_parent().filename,
 				multiplayer.root_node.get_path_to(get_parent().get_parent()))
