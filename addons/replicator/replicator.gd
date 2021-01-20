@@ -111,7 +111,8 @@ func setup_member(member : ReplicatedMember) -> void:
 			timer.wait_time = member.replicate_interval
 			timer.autostart = true
 			timer.one_shot = false
-			timer.connect("timeout", self, "_on_ReplicateTimer_timeout", [member])
+			timer.connect("timeout", self, "_on_ReplicateTimer_timeout",
+					[member])
 			add_child(timer)
 	else:
 		var tween := Tween.new()
@@ -123,7 +124,8 @@ func replicate_member(member : ReplicatedMember) -> void:
 	var last_value = last_replicated_values.get(member.name)
 	var current_value = subject.get(member.name)
 	
-	assert(member.name in subject, "member %s not found on %s" % [member.name, subject.name])
+	assert(member.name in subject, "member %s not found on %s" % [member.name,
+			subject.name])
 	
 	if _is_variant_equal_approx(current_value, last_value):
 		if member.reliable:
@@ -140,11 +142,14 @@ func replicate_member(member : ReplicatedMember) -> void:
 	for peer in multiplayer.get_network_connected_peers():
 		if peer == multiplayer.get_network_unique_id():
 			continue
-		if player_location_manager.get_distance(subject, peer) < max_replication_distance:
+		if player_location_manager.get_distance(subject, peer) <\
+				max_replication_distance:
 			if member.reliable:
-				rpc_id(peer, "_set_member_on_puppet", member.name, current_value)
+				rpc_id(peer, "_set_member_on_puppet", member.name,
+						current_value)
 			else:
-				rpc_unreliable_id(peer, "_set_member_on_puppet", member.name, current_value)
+				rpc_unreliable_id(peer, "_set_member_on_puppet", member.name,
+						current_value)
 	
 	last_replicated_values[member.name] = current_value
 
@@ -158,7 +163,8 @@ func get_member_configuration(member_name : String) -> ReplicatedMember:
 
 func _setup_master() -> void:
 	remote_spawner = _find_node_on_parents(self, "RemoteSpawner")
-	player_location_manager = _find_node_on_parents(self, "PlayerLocationManager")
+	player_location_manager = _find_node_on_parents(self,
+			"PlayerLocationManager")
 	
 	if spawn_on_joining_peers and not subject.filename.empty():
 		multiplayer.connect("network_peer_connected", self, "_on_network_peer_connected")
@@ -176,7 +182,8 @@ func _setup_master() -> void:
 
 func _setup_puppet() -> void:
 	if despawn_on_disconnect:
-		multiplayer.connect("network_peer_disconnected", self, "_on_network_peer_disconnected")
+		multiplayer.connect("network_peer_disconnected", self,
+				"_on_network_peer_disconnected")
 
 
 puppet func _set_member_on_puppet(member : String, value) -> void:
@@ -200,7 +207,8 @@ puppet func _set_member_on_puppet(member : String, value) -> void:
 # called when the master node exits the tree
 puppet func _despawn() -> void:
 	subject.queue_free()
-	_log("%s despawned as master (%s) disconnected" % [subject.name, subject.get_network_master()])
+	_log("%s despawned as master (%s) disconnected" % [subject.name,
+			subject.get_network_master()])
 
 
 func _on_tree_exiting() -> void:
@@ -217,7 +225,8 @@ func _on_network_peer_connected(id : int) -> void:
 func _on_network_peer_disconnected(id : int) -> void:
 	if id == get_network_master():
 		subject.queue_free()
-		_log("%s despawned as master (%s) disconnected" % [subject.name, get_network_master()])
+		_log("%s despawned as master (%s) disconnected" % [subject.name,
+				get_network_master()])
 
 
 func _on_ReplicateTimer_timeout(member : ReplicatedMember) -> void:
