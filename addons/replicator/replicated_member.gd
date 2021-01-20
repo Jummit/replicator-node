@@ -10,7 +10,7 @@ be replicated how.
 # the name of the property
 export var name := ""
 # if the property should be smoothly interpolated when a new value is received
-export var interpolate_changes := true
+export var interpolate_changes := false
 # if the property should be automatically
 # replicated in the specified `replicate_interval`
 export var replicate_automatically := false
