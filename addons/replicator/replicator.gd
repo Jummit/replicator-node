@@ -26,6 +26,9 @@ Members are only replicated when they change,
 which is detected using the native `equal_approx` method.
 """
 
+# emitted before the master/puppet are set up
+signal pre_init
+
 export var members : Array
 # spawn on puppet instances when spawned on the master instance
 export var replicate_spawning := false
@@ -68,6 +71,8 @@ func _ready() -> void:
 	
 	if multiplayer.network_peer.get_connection_status() != NetworkedMultiplayerPeer.CONNECTION_CONNECTED:
 		yield(multiplayer, "connected_to_server")
+	
+	emit_signal("pre_init")
 	
 	if is_network_master():
 		_setup_master()
