@@ -121,7 +121,12 @@ func replicate_member(member : ReplicatedMember) -> void:
 	assert(member.name in subject, "member %s not found on %s" % [member.name, subject.name])
 	
 	if _is_variant_equal_approx(current_value, last_value):
-		return
+		if member.reliable:
+			return
+		else:
+			if randf() > member.importance:
+				member.importance += 0.1
+				return
 	
 	if member.logging:
 		_log("Replicating %s of %s with value of %s" %

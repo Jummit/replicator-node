@@ -28,3 +28,6 @@ export var max_interpolation_distance := INF
 # the minimum difference a packet needs to have from the current value to
 # be accepted
 export var min_replication_difference := 0.0
+
+# how likely it is that this member will be replicated
+var importance := 0.0
