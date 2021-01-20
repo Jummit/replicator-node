@@ -10,21 +10,28 @@ func _ready():
 	get_tree().connect("node_added", self, "_on_SceneTree_node_added")
 
 
+func replicate_node(node : Node, peer := 0) -> void:
+	assert(node.filename, "Can't spawn node that isn't root of the scene")
+	rpc_id(peer, "spawn", node.name, node.get_network_master(), node.filename,
+		multiplayer.root_node.get_path_to(node.get_parent()))
+
+
 remote func spawn(node_name : String, network_master : int,
-		scene_path : String, path : NodePath) -> void:
+		scene : String, parent : NodePath) -> void:
 	if enable_logging:
-		print("Spawning %s named %s on %s" %
-				[scene_path, node_name, path])
-	var instance : Node = load(scene_path).instance()
+		print("Spawning %s named %s on %s" % [scene, node_name, parent])
+	# todo: cache scenes
+	var instance : Node = load(scene).instance()
 	instance.name = node_name
 	instance.set_network_master(network_master)
 	
 	# use a path relative to multiplayer.root_node to make it possible
 	# to run server and client on the same machine
-	multiplayer.root_node.get_node(path).add_child(instance)
+	multiplayer.root_node.get_node(parent).add_child(instance)
 	
 	# hide the instance as its position may not yet be
 	# replicated to avoid seeing the instance at the origin
+	# todo: move this to `Replicator`
 	if instance.has_method("show") and instance.has_method("hide"):
 		instance.hide()
 		yield(get_tree().create_timer(.01), "timeout")

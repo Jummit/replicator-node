@@ -36,10 +36,7 @@ export var replicate_spawning := false
 export var replicate_despawning := false
 # despawn when the master disconnects
 export var despawn_on_disconnect := false
-# spawn on newly joined peers
-export var spawn_on_joining_peers := false
-# the maxium distance the `subject` can be
-# away from the player and still get replicated
+# the maxium distance `subject` can be away from the player and get replicated
 export var max_replication_distance := INF
 # log replication of members on the master instance
 export var enable_logging := false
@@ -69,7 +66,7 @@ func _ready() -> void:
 	if Engine.editor_hint:
 		return
 	
-	if multiplayer.network_peer.get_connection_status() != NetworkedMultiplayerPeer.CONNECTION_CONNECTED:
+	if not multiplayer.connected():
 		yield(multiplayer, "connected_to_server")
 	
 	emit_signal("pre_init")
@@ -99,7 +96,7 @@ func _process(_delta : float) -> void:
 
 
 func _get_configuration_warning() -> String:
-	if (replicate_spawning or spawn_on_joining_peers) and get_parent().filename.empty():
+	if replicate_spawning and not subject.filename:
 		return "Can't replicate spawning if not attached to the root node of the scene."
 	return ""
 
@@ -166,13 +163,12 @@ func _setup_master() -> void:
 	player_location_manager = _find_node_on_parents(self,
 			"PlayerLocationManager")
 	
-	if spawn_on_joining_peers and not subject.filename.empty():
-		multiplayer.connect("network_peer_connected", self, "_on_network_peer_connected")
+	if replicate_spawning and subject.filename:
+		multiplayer.connect("network_peer_connected", self,
+				"_on_network_peer_connected")
 	if replicate_spawning:
 		_log("Spawning %s on connected peers" % subject.name)
-		remote_spawner.rpc("spawn", get_parent().name, get_network_master(),
-				get_parent().filename,
-				multiplayer.root_node.get_path_to(get_parent().get_parent()))
+		remote_spawner.replicate_node(subject)
 		yield(get_tree(), "idle_frame")
 		for member in members:
 			replicate_member(member)
@@ -193,11 +189,12 @@ puppet func _set_member_on_puppet(member : String, value) -> void:
 		return
 	if configuration.logging:
 		_log("%s of %s set to %s" % [member, subject.name, value])
-	var interpolate : bool = _distance(value, subject.get(member)) < configuration.max_interpolation_distance
-	if configuration.interpolate_changes and interpolate and already_replicated_once.has(member):
-		get_node(member).interpolate_property(
-				subject, member, subject.get(member),
-				value, configuration.replicate_interval)
+	var interpolate : bool = _distance(value, subject.get(member)) <\
+			configuration.max_interpolation_distance
+	if configuration.interpolate_changes and interpolate\
+			and already_replicated_once.has(member):
+		get_node(member).interpolate_property(subject, member,
+				subject.get(member), value, configuration.replicate_interval)
 		get_node(member).start()
 	else:
 		subject.set(member, value)
@@ -217,9 +214,7 @@ func _on_tree_exiting() -> void:
 
 func _on_network_peer_connected(id : int) -> void:
 	_log("Spawning %s on newly connected peer (%s)" % [subject.filename, id])
-	remote_spawner.rpc_id(
-			id, "spawn", get_parent().name, get_network_master(), get_parent().filename,
-			multiplayer.root_node.get_path_to(get_parent().get_parent()))
+	remote_spawner.replicate_node(subject, id)
 
 
 func _on_network_peer_disconnected(id : int) -> void:
@@ -247,10 +242,12 @@ static func _is_variant_equal_approx(a, b) -> bool:
 
 
 static func _distance(a, b) -> float:
-	if (a is Transform and b is Transform) or (a is Transform2D and b is Transform2D):
-		return a.origin.distance_to(b.origin)
-	if (a is Vector2 and b is Vector2) or (a is Vector3 and b is Vector3):
-		return a.distance_to(b)
+	if typeof(a) == typeof(b):
+		match typeof(a):
+			TYPE_TRANSFORM, TYPE_TRANSFORM2D:
+				return a.origin.distance_to(b.origin)
+			TYPE_VECTOR2, TYPE_VECTOR3:
+				return a.distance_to(b)
 	if (a is float or a is int) and (b is float or b is int):
 		return a - b
 	return INF
