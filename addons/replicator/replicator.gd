@@ -4,26 +4,26 @@ extends Node
 """
 Replicates spawning, despawning and the properties listed in `members`.
 
-Supports interpolation and replicating properties at specified intervals
-and spawning on joining peers.
+Supports interpolation and replicating properties at specified intervals and
+spawning on joining peers.
 
-The `subject` is the node whose properties get replicated, and which is spawned / despawned.
-It is the parent of the replicator by default, but can be changed programatically.
+The `subject` is the node whose properties get replicated, and which is
+spawned / despawned. It is the parent of the replicator by default, but can be
+changed programatically.
 
-For spawning to work the `subject` must be the root of the scene,
-as only the filename of the scene is send over the network.
+For spawning to work the `subject` must be the root of the scene, as only the
+filename of the scene is send over the network.
 
-`members` is a list of `ReplicatedMember`s,
-which store a number of settings regarding replication.
-`replicate_member` can be called to replicate members manually.
+`members` is a list of `ReplicatedMember`s which store a number of settings
+regarding replication. `replicate_member` can be called to replicate members
+manually.
 
-Even though `PlayerLocationManager` and `RemoteSpawner` are autoloads,
-they are fetched manually.
-This allows for multiple instances at the same time,
-which is needed to run server and client simultaniously.
+Even though `PlayerLocationManager` and `RemoteSpawner` are autoloads, they are
+fetched manually. This allows for multiple instances at the same time, which is
+needed to run server and client simultaniously.
 
-Members are only replicated when they change,
-which is detected using the native `equal_approx` method.
+Members are only replicated when they change, which is detected using the
+native `equal_approx` method.
 """
 
 # emitted before the master/puppet are set up
