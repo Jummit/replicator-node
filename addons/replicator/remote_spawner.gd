@@ -20,7 +20,7 @@ remote func spawn(node_name : String, network_master : int,
 		scene : String, parent : NodePath) -> void:
 	if enable_logging:
 		print("Spawning %s named %s on %s" % [scene, node_name, parent])
-	# todo: cache scenes
+	# Todo: cache scenes.
 	var instance : Node = load(scene).instance()
 	instance.name = node_name
 	instance.set_network_master(network_master)
