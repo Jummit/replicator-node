@@ -13,7 +13,7 @@ func _ready():
 func replicate_node(node : Node, peer := 0) -> void:
 	assert(node.filename, "Can't spawn node that isn't root of the scene")
 	rpc_id(peer, "spawn", node.name, node.get_network_master(), node.filename,
-		multiplayer.root_node.get_path_to(node.get_parent()))
+		get_path_to(node.get_parent()))
 
 
 remote func spawn(node_name : String, network_master : int,
@@ -27,7 +27,7 @@ remote func spawn(node_name : String, network_master : int,
 	
 	# Use a path relative to multiplayer.root_node to make it possible
 	# to run server and client on the same machine.
-	multiplayer.root_node.get_node(parent).add_child(instance)
+	get_node(parent).add_child(instance)
 	
 	# Hide the instance as its position may not yet be
 	# replicated to avoid seeing the instance at the origin.
