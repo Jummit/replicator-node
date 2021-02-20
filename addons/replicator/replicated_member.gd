@@ -7,27 +7,27 @@ Holds information about which member should
 be replicated how.
 """
 
-# the name of the property
+# The name of the property.
 export var name := ""
-# if the property should be smoothly interpolated when a new value is received
+# If the property should be smoothly interpolated when a new value is received.
 export var interpolate_changes := false
-# if the property should be automatically
-# replicated in the specified `replicate_interval`
+# If the property should be automatically
+# Replicated in the specified `replicate_interval`.
 export var replicate_automatically := false
-# if `replicate_automatically` is true,
-# how many seconds to wait to send the next snapshot
+# If `replicate_automatically` is true,
+# How many seconds to wait to send the next snapshot.
 export var replicate_interval := 0.2
-# whether to use NetworkedMultiplayerPeer.TRANSFER_MODE_RELIABLE
-# instead of NetworkedMultiplayerPeer.TRANSFER_MODE_UNRELIABLE
+# Whether to use `NetworkedMultiplayerPeer.TRANSFER_MODE_RELIABLE`
+# Instead of `NetworkedMultiplayerPeer.TRANSFER_MODE_UNRELIABLE`.
 export var reliable := false
-# whether to log when an update is received on a puppet peer
+# Whether to log when an update is received on a puppet peer.
 export var logging := false
-# if `replicate_automatically` is true,
-# maximum difference between snapshots that is interpolated
+# If `replicate_automatically` is true,
+# Maximum difference between snapshots that is interpolated.
 export var max_interpolation_distance := INF
-# the minimum difference a packet needs to have from the current value to
-# be accepted
+# The minimum difference a packet needs to have from the current value to.
+# Be accepted.
 export var min_replication_difference := 0.0
 
-# how likely it is that this member will be replicated
+# How likely it is that this member will be replicated.
 var importance := 0.0

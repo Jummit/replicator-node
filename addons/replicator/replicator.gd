@@ -26,26 +26,27 @@ Members are only replicated when they change, which is detected using the
 native `equal_approx` method.
 """
 
-# emitted before the master/puppet are set up
+# Emitted before the master/puppet are set up. This can be used to alter the
+# Replicator before it does it's setup.
 signal pre_init
 
 export var members : Array
-# spawn on puppet instances when spawned on the master instance
+# Spawn on puppet instances when spawned on the master instance.
 export var replicate_spawning := false
-# despawn on puppet instances when despawned on the master instance
+# Despawn on puppet instances when despawned on the master instance.
 export var replicate_despawning := false
-# despawn when the master disconnects
+# Despawn when the master disconnects.
 export var despawn_on_disconnect := false
-# the maxium distance `subject` can be away from the player and get replicated
+# The maxium distance `subject` can be away from the player and get replicated.
 export var max_replication_distance := INF
-# log replication of members on the master instance
+# Log replication of members on the master instance.
 export var enable_logging := false
 
 var remote_spawner : RemoteSpawner
 var player_location_manager : PlayerLocationManager
 
-# store which members where replicated,
-# to only interpolate if the master sent us a state
+# Store which members where replicated,
+# to only interpolate if the master sent us a state.
 var already_replicated_once : Dictionary = {}
 var last_replicated_values : Dictionary = {}
 
@@ -76,7 +77,7 @@ func _ready() -> void:
 	else:
 		_setup_puppet()
 	
-	# make members unique so they can be modified on a per-instance basis
+	# Make members unique so they can be modified on a per-instance basis.
 	members = members.duplicate()
 	for member_num in members.size():
 		members[member_num] = members[member_num].duplicate()
@@ -201,7 +202,7 @@ puppet func _set_member_on_puppet(member : String, value) -> void:
 		already_replicated_once[member] = true
 
 
-# called when the master node exits the tree
+# Called when the master node exits the tree.
 puppet func _despawn() -> void:
 	subject.queue_free()
 	_log("%s despawned as master (%s) disconnected" % [subject.name,
