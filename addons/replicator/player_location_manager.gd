@@ -1,4 +1,5 @@
 extends Node
+class_name PlayerLocationManager, "res://addons/third_party/replicator/replicator_node_icon.svg"
 
 """
 Singleton used to manage player locations

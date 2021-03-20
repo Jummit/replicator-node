@@ -1,4 +1,5 @@
 extends Node
+class_name RemoteSpawner, "res://addons/third_party/replicator/replicator_node_icon.svg"
 
 """
 Singleton that manages replicated spawning
