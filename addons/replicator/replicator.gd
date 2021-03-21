@@ -31,7 +31,7 @@ native `equal_approx` method.
 # Replicator before it does it's setup.
 signal pre_init
 
-export var members : Array
+export(Array, ReplicatedMember) var members : Array
 # Spawn on puppet instances when spawned on the master instance.
 export var replicate_spawning := false
 # Despawn on puppet instances when despawned on the master instance.
@@ -67,7 +67,6 @@ func _ready() -> void:
 	set_process(Engine.editor_hint)
 	if Engine.editor_hint:
 		return
-	
 	if not multiplayer.connected():
 		yield(multiplayer, "connected_to_server")
 	
@@ -89,12 +88,6 @@ func _ready() -> void:
 
 func _process(_delta : float) -> void:
 	update_configuration_warning()
-	
-	for member_num in range(members.size()):
-		if not typeof(members[member_num]) == TYPE_OBJECT:
-			members[member_num] = ReplicatedMember.new()
-		else:
-			members[member_num].resource_name = members[member_num].name
 
 
 func _get_configuration_warning() -> String:
