@@ -2,15 +2,15 @@
 
 importer="texture"
 type="StreamTexture"
-path="res://.import/replicator_node_icon.svg-630113f04b0bfa990eafa9735056e9d9.stex"
+path="res://.import/replicator_node_icon.svg-079fc2b75a1f2213b640ecd7a1cbcb49.stex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://addons/replicator/replicator_node_icon.svg"
-dest_files=[ "res://.import/replicator_node_icon.svg-630113f04b0bfa990eafa9735056e9d9.stex" ]
+source_file="res://addons/third_party/replicator/replicator_node_icon.svg"
+dest_files=[ "res://.import/replicator_node_icon.svg-079fc2b75a1f2213b640ecd7a1cbcb49.stex" ]
 
 [params]
 

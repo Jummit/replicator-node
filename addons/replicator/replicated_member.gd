@@ -4,8 +4,7 @@ class_name ReplicatedMember, "replicator_node_icon.svg"
 """
 Member resource to be used in a `Replicator`
 
-Holds information about which member should
-be replicated how.
+Holds information about which member should be replicated how.
 """
 
 # The name of the property.
@@ -29,7 +28,7 @@ export var max_interpolation_distance := INF
 # The minimum difference a packet needs to have from the current value to.
 # Be accepted.
 export var min_replication_difference := 0.0
-
+# The node that has the member.
 export var node := NodePath("../")
 
 # How likely it is that this member will be replicated.
