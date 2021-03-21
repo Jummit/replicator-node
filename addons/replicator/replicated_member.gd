@@ -1,3 +1,4 @@
+tool
 extends Resource
 class_name ReplicatedMember, "replicator_node_icon.svg"
 
@@ -8,7 +9,7 @@ Holds information about which member should be replicated how.
 """
 
 # The name of the property.
-export var name := ""
+export var name := "" setget set_name
 # If the property should be smoothly interpolated when a new value is received.
 export var interpolate_changes := false
 # If the property should be automatically
@@ -33,3 +34,7 @@ export var node := NodePath("../")
 
 # How likely it is that this member will be replicated.
 var importance := 0.0
+
+func set_name(to : String) -> void:
+	name = to
+	resource_name = name
