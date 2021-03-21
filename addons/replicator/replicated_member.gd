@@ -30,5 +30,7 @@ export var max_interpolation_distance := INF
 # Be accepted.
 export var min_replication_difference := 0.0
 
+export var node := NodePath("../")
+
 # How likely it is that this member will be replicated.
 var importance := 0.0

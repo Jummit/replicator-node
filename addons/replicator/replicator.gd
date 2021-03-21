@@ -114,10 +114,11 @@ func setup_member(member : ReplicatedMember) -> void:
 
 func replicate_member(member : ReplicatedMember) -> void:
 	var last_value = last_replicated_values.get(member.name)
-	var current_value = subject.get(member.name)
+	var node := get_node(member.node)
+	var current_value = node.get(member.name)
 	
-	assert(member.name in subject, "member %s not found on %s" % [member.name,
-			subject.name])
+	assert(member.name in node, "member %s not found on %s" % [member.name,
+			node.name])
 	
 	if _is_variant_equal_approx(current_value, last_value):
 		if member.reliable:
@@ -179,20 +180,22 @@ func _setup_puppet() -> void:
 
 puppet func _set_member_on_puppet(member : String, value) -> void:
 	var configuration := get_member_configuration(member)
-	if configuration.min_replication_difference and _distance(subject.get(
-			member), value) < configuration.min_replication_difference:
+	var node := get_node(configuration.node)
+	var old_value = node.get(member)
+	var difference := _distance(old_value, value)
+	if configuration.min_replication_difference and\
+			difference < configuration.min_replication_difference:
 		return
 	if configuration.logging:
 		_log("%s of %s set to %s" % [member, subject.name, value])
-	var interpolate : bool = _distance(value, subject.get(member)) <\
-			configuration.max_interpolation_distance
-	if configuration.interpolate_changes and interpolate\
+	if configuration.interpolate_changes and\
+			difference < configuration.max_interpolation_distance\
 			and already_replicated_once.has(member):
-		get_node(member).interpolate_property(subject, member,
-				subject.get(member), value, configuration.replicate_interval)
+		get_node(member).interpolate_property(node, member,
+				node.get(member), value, configuration.replicate_interval)
 		get_node(member).start()
 	else:
-		subject.set(member, value)
+		node.set(member, value)
 		already_replicated_once[member] = true
 
 
@@ -251,9 +254,7 @@ static func _distance(a, b) -> float:
 static func _find_node_on_parents(start_node : Node, node_name : String):
 	if not start_node.get_parent():
 		return false
-	
 	var node := start_node.get_parent().find_node(node_name, false, false)
 	if node:
 		return node
-	
 	return _find_node_on_parents(start_node.get_parent(), node_name)
