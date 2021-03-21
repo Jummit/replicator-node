@@ -1,5 +1,5 @@
 extends Resource
-class_name ReplicatedMember, "res://addons/third_party/replicator/replicator_node_icon.svg"
+class_name ReplicatedMember, "replicator_node_icon.svg"
 
 """
 Member resource to be used in a `Replicator`
