@@ -1,6 +1,6 @@
 tool
 extends Node
-class_name Replicator, "res://addons/third_party/replicator/replicator_node_icon.svg"
+class_name Replicator, "replicator_node_icon.svg"
 
 """
 Replicates spawning, despawning and the properties listed in `members`.
